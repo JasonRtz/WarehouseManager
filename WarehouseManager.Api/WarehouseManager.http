@@ -1,0 +1,86 @@
+@baseUrl = https://localhost:7105
+
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "USB-C Hub",
+  "sku": "HUB-003",
+  "description": "USB-C hub with four ports",
+  "quantity": 25,
+  "price": 34.99
+}
+
+### Update product
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Wireless Gaming Mouse",
+  "sku": "WM-001",
+  "description": "Updated wireless mouse with RGB lighting.",
+  "quantity": 200,
+  "price": 39.99
+}
+
+### Verify update
+GET {{baseUrl}}/api/products/1
+
+### Delete product
+DELETE {{baseUrl}}/api/products/2
+
+### Verify deletion
+GET {{baseUrl}}/api/products/2
+
+### Get remaining products
+GET {{baseUrl}}/api/products
+
+### Test invalid product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "",
+  "sku": "",
+  "description": "Invalid test product",
+  "quantity": -50,
+  "price": -19.99
+}
+
+### Test duplicate SKU
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Another Wireless Mouse",
+  "sku": "WM-001",
+  "quantity": 50,
+  "price": 19.99
+}
+
+### Test duplicate SKU on PUT
+PUT {{baseUrl}}/api/products/2
+Content-Type: application/json
+
+{
+  "name": "Gaming Keyboard",
+  "sku": "WM-001",
+  "description": "Mechanical gaming keyboard",
+  "quantity": 100,
+  "price": 89.99
+}
+
+  ### Test valid SKU on PUT
+PUT {{baseUrl}}/api/products/2
+Content-Type: application/json
+
+{
+  "name": "Gaming Keyboard",
+  "sku": "MK-999",
+  "description": "Mechanical gaming keyboard",
+  "quantity": 100,
+  "price": 89.99
+}
+
+### Verify updated product
+GET {{baseUrl}}/api/products/2
