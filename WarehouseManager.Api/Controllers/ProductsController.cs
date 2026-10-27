@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WarehouseManager.Api.Models;
+using WarehouseManager.Api.Data;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace WarehouseManager.Api.Controllers
 {
@@ -7,86 +10,66 @@ namespace WarehouseManager.Api.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private static readonly List<Product> products = new()
-        {
-            new Product
-            {
-                Id = 1,
-                Name = "Wireless Mouse",
-                SKU = "WM-001",
-                Description = "A high-precision wireless mouse.",
-                Quantity = 150,
-                Price = 29.99m
-            },
+        private readonly WarehouseDbContext _context;
 
-            new Product
-            {
-                Id = 2,
-                Name = "Mechanical Keyboard",
-                SKU = "MK-002",
-                Description = "A durable mechanical keyboard with customizable keys.",
-                Quantity = 100,
-                Price = 79.99m
-            }
-        };
+        public ProductsController(WarehouseDbContext context)
+        {
+            _context = context;
+        }
+      
 
         [HttpGet]
-        public IEnumerable<Product> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return products;
+            var products = await _context.Products.ToListAsync();
+            return Ok(products);
         }
 
 
         [HttpGet("{id}")]
-        public ActionResult<Product> GetProduct(int id)
+        public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = products.FirstOrDefault(p => p.Id == id);
-
-            if (product != null)
-            {
-                return product;
-            }
-
-            return NotFound();
-        }
-    
-
-        [HttpPost]
-        public ActionResult<Product> CreateProduct([FromBody] Product product)
-        {
-            if (products.Any(p => p.SKU == product.SKU))
-            {
-                return Conflict("A product with the same SKU already exists.");
-            }
-            
-            if (products.Count > 0)
-            {
-                product.Id = products.Max(p => p.Id) + 1;
-            }
-            else
-            {
-                product.Id = 1; 
-            }
-
-            products.Add(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
-            
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateProduct(int id, [FromBody] Product updatedProduct)
-        {
-
-            var product = products.FirstOrDefault(p => p.Id == id);
-
+            var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
+            return Ok(product);
+        }
+    
 
-            if (products.Any(p => p.SKU == updatedProduct.SKU && p.Id != id))
+        [HttpPost]
+        public async  Task<ActionResult<Product>> CreateProduct([FromBody] Product product)
+        {
+            _context.Products.Add(product);
+
+            try
             {
-                return Conflict("A product with the same SKU already exists.");
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is PostgresException pgEx &&
+                pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
+                pgEx.ConstraintName == "IX_Products_SKU"
+            )
+            {
+                return Conflict("A product with this SKU already exists.");
+            }
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+        }
+
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product updatedProduct)
+        {
+
+            var product = await _context.Products.FindAsync(id);
+
+            if (product == null)
+            {
+                return NotFound();
             }
 
             product.Name = updatedProduct.Name;
@@ -95,21 +78,36 @@ namespace WarehouseManager.Api.Controllers
             product.Quantity = updatedProduct.Quantity;
             product.Price = updatedProduct.Price;
 
+            try
+            {
+                await _context.SaveChangesAsync();
+
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is PostgresException pgEx &&
+                pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
+                pgEx.ConstraintName == "IX_Products_SKU"
+            )
+            {
+                return Conflict("A product with this SKU already exists.");
+            }
+
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(int id)
         {
 
-            var product = products.FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products.FindAsync(id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            products.Remove(product);
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }

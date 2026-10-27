@@ -84,3 +84,100 @@ Content-Type: application/json
 
 ### Verify updated product
 GET {{baseUrl}}/api/products/2
+
+### Create product in PostgreSQL
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "USB-C Hub",
+  "sku": "HUB-003",
+  "description": "USB-C hub with four ports",
+  "quantity": 25,
+  "price": 34.99
+}
+
+### Verify database persistence
+GET {{baseUrl}}/api/products
+
+### Update USB-C Hub in PostgreSQL
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "USB-C Hub Pro",
+  "sku": "HUB-003",
+  "description": "USB-C hub with six ports",
+  "quantity": 40,
+  "price": 44.99
+}
+
+### Verify update
+GET {{baseUrl}}/api/products/1
+
+### Delete product
+DELETE {{baseUrl}}/api/products/1
+
+### Verify deletion
+GET {{baseUrl}}/api/products/1
+
+### Create first product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard",
+  "sku": "KEY-001",
+  "quantity": 15,
+  "price": 79.99
+}
+
+###
+
+### Try duplicate SKU
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Another Keyboard",
+  "sku": "key-001",
+  "quantity": 10,
+  "price": 49.99
+}
+
+
+### Create a mouse
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Gaming Mouse",
+  "sku": "MOU-001",
+  "quantity": 20,
+  "price": 39.99
+}
+
+### Update mouse with duplicate SKU
+PUT {{baseUrl}}/api/products/3
+Content-Type: application/json
+
+{
+  "name": "Gaming Mouse",
+  "sku": "key-001",
+  "quantity": 20,
+  "price": 39.99
+}
+
+### Verify update
+GET {{baseUrl}}/api/products/4
+
+### Update mouse with duplicate SKU
+PUT {{baseUrl}}/api/products/4
+Content-Type: application/json
+
+{
+  "name": "Gaming Mouse",
+  "sku": "key-001",
+  "quantity": 20,
+  "price": 39.99
+}
